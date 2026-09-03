@@ -1,0 +1,392 @@
+.gemini-chat {
+  width: 100%;
+  max-width: 1000px;
+  height: calc(100vh - 145px);
+  min-height: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(15, 15, 20, 0.78);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.gemini-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.gemini-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gemini-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 22px;
+}
+
+.gemini-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+}
+
+.gemini-header p {
+  margin: 4px 0 0;
+  color: #8f919b;
+  font-size: 13px;
+}
+
+.clear-chat-button {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #b7b8c1;
+  padding: 9px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.clear-chat-button:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.gemini-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 24px;
+}
+
+.chat-empty {
+  max-width: 650px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 28px;
+}
+
+.chat-empty h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 25px;
+}
+
+.chat-empty p {
+  max-width: 500px;
+  margin: 10px auto 25px;
+  color: #858791;
+  line-height: 1.6;
+}
+
+.suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.suggestion-grid button {
+  padding: 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  color: #c8c9d0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.suggestion-grid button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.chat-message {
+  display: flex;
+  gap: 13px;
+  margin-bottom: 26px;
+}
+
+.user-message {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.message-content {
+  max-width: min(760px, 80%);
+  padding: 13px 16px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #d7d8de;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.user-message .message-content {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.markdown-content p {
+  margin: 0 0 10px;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  color: #fff;
+}
+
+.markdown-content pre {
+  overflow-x: auto;
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: #111217 !important;
+}
+
+.markdown-content code {
+  font-family: monospace;
+}
+
+.markdown-content :not(pre) > code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px;
+}
+
+.chat-image {
+  display: block;
+  max-width: 320px;
+  max-height: 320px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.streaming-cursor {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 15px 17px;
+}
+
+.typing-indicator span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #777984;
+  animation: typing 1.2s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.selected-image {
+  position: relative;
+  width: fit-content;
+  margin: 0 24px 10px;
+}
+
+.selected-image img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.selected-image button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 23px;
+  height: 23px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.gemini-input-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  margin: 0 20px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.gemini-input-area textarea {
+  flex: 1;
+  resize: none;
+  max-height: 150px;
+  padding: 9px 4px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.gemini-input-area textarea::placeholder {
+  color: #70727c;
+}
+
+.input-tool-button,
+.send-button {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.input-tool-button {
+  background: transparent;
+  color: #a4a5ae;
+  font-size: 22px;
+}
+
+.input-tool-button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.send-button {
+  background: #fff;
+  color: #111;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.send-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.gemini-disclaimer {
+  padding: 9px 20px 14px;
+  text-align: center;
+  color: #62646e;
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .gemini-chat {
+    height: calc(100vh - 115px);
+    min-height: 500px;
+    border-radius: 14px;
+  }
+
+  .gemini-header {
+    padding: 16px;
+  }
+
+  .gemini-messages {
+    padding: 20px 14px;
+  }
+
+  .chat-empty {
+    margin: 45px auto;
+  }
+
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .message-content {
+    max-width: 85%;
+  }
+
+  .gemini-input-area {
+    margin: 0 10px;
+  }
+
+  .selected-image {
+    margin-left: 14px;
+  }
+}
