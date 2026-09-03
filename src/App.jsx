@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import GeminiChat from "./components/GeminiChat";
+import ContentGenerator from "./components/ContentGenerator";
 
 const API_BASE =
   "https://ai-media-studio-api.xto1971.workers.dev";
@@ -41,6 +42,16 @@ function App() {
             <span className="tool-icon">🖼️</span>
             <span>Image to Video</span>
           </button>
+
+<button
+  className={`tool-button ${
+    activeTool === "content" ? "active" : ""
+  }`}
+  onClick={() => setActiveTool("content")}
+>
+  <span className="tool-icon">✍️</span>
+  <span>Content Generator</span>
+</button>
 
           <button
             className={`tool-button ${
@@ -92,6 +103,13 @@ function App() {
           {activeTool === "tts" && <TextToSpeech />}
           {activeTool === "image-video" && <ImageToVideo />}
           {activeTool === "lip-sync" && <LipSync />}
+
+{activeTool === "chat" && <GeminiChat />}
+
+{activeTool === "tts" && <TextToSpeech />}
+{activeTool === "image-video" && <ImageToVideo />}
+{activeTool === "content" && <ContentGenerator />}
+{activeTool === "lip-sync" && <LipSync />}
 
 {activeTool === "chat" && <GeminiChat />}
           
