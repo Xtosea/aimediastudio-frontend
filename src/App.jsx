@@ -21,48 +21,48 @@ function App() {
         </div>
 
         <div className="sidebar-section">
-          <div className="section-label">CREATE</div>
+  <div className="section-label">CREATE</div>
 
-          <button
-            className={`tool-button ${
-              activeTool === "tts" ? "active" : ""
-            }`}
-            onClick={() => setActiveTool("tts")}
-          >
-            <span className="tool-icon">🎙️</span>
-            <span>Text to Speech</span>
-          </button>
+  <button
+    className={`tool-button ${
+      activeTool === "tts" ? "active" : ""
+    }`}
+    onClick={() => setActiveTool("tts")}
+  >
+    <span className="tool-icon">🎙️</span>
+    <span>Text to Speech</span>
+  </button>
 
-          <button
-            className={`tool-button ${
-              activeTool === "image-video" ? "active" : ""
-            }`}
-            onClick={() => setActiveTool("image-video")}
-          >
-            <span className="tool-icon">🖼️</span>
-            <span>Image to Video</span>
-          </button>
+  <button
+    className={`tool-button ${
+      activeTool === "image-video" ? "active" : ""
+    }`}
+    onClick={() => setActiveTool("image-video")}
+  >
+    <span className="tool-icon">🖼️</span>
+    <span>Image to Video</span>
+  </button>
 
-<button
-  className={`tool-button ${
-    activeTool === "content" ? "active" : ""
-  }`}
-  onClick={() => setActiveTool("content")}
->
-  <span className="tool-icon">✍️</span>
-  <span>Content Generator</span>
-</button>
+  <button
+    className={`tool-button ${
+      activeTool === "content" ? "active" : ""
+    }`}
+    onClick={() => setActiveTool("content")}
+  >
+    <span className="tool-icon">✍️</span>
+    <span>Content Generator</span>
+  </button>
 
-          <button
-            className={`tool-button ${
-              activeTool === "lip-sync" ? "active" : ""
-            }`}
-            onClick={() => setActiveTool("lip-sync")}
-          >
-            <span className="tool-icon">👄</span>
-            <span>Lip Sync</span>
-          </button>
-        </div>
+  <button
+    className={`tool-button ${
+      activeTool === "lip-sync" ? "active" : ""
+    }`}
+    onClick={() => setActiveTool("lip-sync")}
+  >
+    <span className="tool-icon">👄</span>
+    <span>Lip Sync</span>
+  </button>
+</div>
 
         <button
   className={`tool-button ${
@@ -100,20 +100,12 @@ function App() {
         </header>
 
         <div className="content">
-          {activeTool === "tts" && <TextToSpeech />}
-          {activeTool === "image-video" && <ImageToVideo />}
-          {activeTool === "lip-sync" && <LipSync />}
-
-{activeTool === "chat" && <GeminiChat />}
-
-{activeTool === "tts" && <TextToSpeech />}
-{activeTool === "image-video" && <ImageToVideo />}
-{activeTool === "content" && <ContentGenerator />}
-{activeTool === "lip-sync" && <LipSync />}
-
-{activeTool === "chat" && <GeminiChat />}
-          
-        </div>
+  {activeTool === "tts" && <TextToSpeech />}
+  {activeTool === "image-video" && <ImageToVideo />}
+  {activeTool === "content" && <ContentGenerator />}
+  {activeTool === "lip-sync" && <LipSync />}
+  {activeTool === "chat" && <GeminiChat />}
+</div>
       </main>
     </div>
   );
