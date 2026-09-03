@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import GeminiChat from "./components/GeminiChat";
 
 const API_BASE =
   "https://ai-media-studio-api.xto1971.workers.dev";
@@ -52,6 +53,16 @@ function App() {
           </button>
         </div>
 
+        <button
+  className={`tool-button ${
+    activeTool === "chat" ? "active" : ""
+  }`}
+  onClick={() => setActiveTool("chat")}
+>
+  <span className="tool-icon">✦</span>
+  <span>AI Chat</span>
+</button>
+
         <div className="sidebar-bottom">
           <div className="api-status">
             <span className="status-dot"></span>
@@ -81,6 +92,9 @@ function App() {
           {activeTool === "tts" && <TextToSpeech />}
           {activeTool === "image-video" && <ImageToVideo />}
           {activeTool === "lip-sync" && <LipSync />}
+
+{activeTool === "chat" && <GeminiChat />}
+          
         </div>
       </main>
     </div>
@@ -818,6 +832,9 @@ function LipSync() {
         <h2>
           Lip Sync Studio
         </h2>
+
+   
+        
 
         <p>
           The interface is ready. We'll connect
