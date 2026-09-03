@@ -47,10 +47,20 @@ export default function GeminiChat() {
 
       reader.onload = () => {
         const result = reader.result;
+
+        if (typeof result !== "string") {
+          reject(new Error("Failed to read image."));
+          return;
+        }
+
         resolve(result.split(",")[1]);
       };
 
-      reader.onerror = reject;
+      reader.onerror = () => {
+        reject(
+          new Error("Failed to read image file.")
+        );
+      };
     });
   };
 
@@ -91,6 +101,8 @@ export default function GeminiChat() {
   };
 
   const handleClearChat = () => {
+    if (loading) return;
+
     setChatLog([]);
     setStreamingText("");
     setInput("");
@@ -98,10 +110,101 @@ export default function GeminiChat() {
     removeImage();
   };
 
+  const extractGeminiText = (data) => {
+    try {
+      const candidates = data?.candidates;
+
+      if (!Array.isArray(candidates)) {
+        return "";
+      }
+
+      let text = "";
+
+      for (const candidate of candidates) {
+        const parts =
+          candidate?.content?.parts;
+
+        if (!Array.isArray(parts)) {
+          continue;
+        }
+
+        for (const part of parts) {
+          if (
+            part &&
+            typeof part.text === "string"
+          ) {
+            text += part.text;
+          }
+        }
+      }
+
+      return text;
+    } catch (error) {
+      console.warn(
+        "Could not extract Gemini text:",
+        error
+      );
+
+      return "";
+    }
+  };
+
+  const processSSELine = (
+    line,
+    onText,
+    onError
+  ) => {
+    const trimmed = line.trim();
+
+    if (!trimmed) return;
+
+    if (!trimmed.startsWith("data:")) {
+      return;
+    }
+
+    const jsonString = trimmed
+      .replace(/^data:\s*/, "")
+      .trim();
+
+    if (!jsonString || jsonString === "[DONE]") {
+      return;
+    }
+
+    try {
+      const data = JSON.parse(jsonString);
+
+      if (data?.error) {
+        onError(
+          new Error(
+            data.error.message ||
+              data.error.status ||
+              "Gemini API error"
+          )
+        );
+
+        return;
+      }
+
+      const text = extractGeminiText(data);
+
+      if (text) {
+        onText(text);
+      }
+    } catch (error) {
+      console.warn(
+        "SSE JSON parse warning:",
+        error
+      );
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if ((!input.trim() && !imageFile) || loading) {
+    if (
+      (!input.trim() && !imageFile) ||
+      loading
+    ) {
       return;
     }
 
@@ -118,17 +221,29 @@ export default function GeminiChat() {
 
     const userMessage = {
       role: "user",
-      parts: currentInput ? [currentInput] : [],
+      parts: currentInput
+        ? [currentInput]
+        : [],
       previewUrl: currentImagePreview,
     };
 
-    setChatLog((prev) => [...prev, userMessage]);
+    setChatLog((prev) => [
+      ...prev,
+      userMessage,
+    ]);
 
     try {
+      // ------------------------------------------------------
+      // Convert image to base64
+      // ------------------------------------------------------
+
       let imageData = null;
 
       if (currentImageFile) {
-        const base64 = await convertToBase64(currentImageFile);
+        const base64 =
+          await convertToBase64(
+            currentImageFile
+          );
 
         imageData = {
           base64,
@@ -136,129 +251,175 @@ export default function GeminiChat() {
         };
       }
 
-      const cleanedHistory = chatLog.map((msg) => ({
-        role: msg.role,
-        parts: Array.isArray(msg.parts)
-          ? msg.parts.map((part) =>
-              typeof part === "string"
-                ? part
-                : part?.text || ""
-            )
-          : [],
-      }));
+      // ------------------------------------------------------
+      // Prepare previous conversation history
+      // ------------------------------------------------------
 
-      const response = await fetch(`${API_URL}/api/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: currentInput,
-          history: cleanedHistory,
-          image: imageData,
-        }),
-      });
+      const cleanedHistory =
+        chatLog.map((msg) => ({
+          role:
+            msg.role === "model"
+              ? "model"
+              : "user",
+
+          parts: Array.isArray(msg.parts)
+            ? msg.parts
+                .map((part) =>
+                  typeof part === "string"
+                    ? part
+                    : part?.text || ""
+                )
+                .filter(Boolean)
+            : [],
+        }));
+
+      // ------------------------------------------------------
+      // Send request to Cloudflare Worker
+      // ------------------------------------------------------
+
+      const response = await fetch(
+        `${API_URL}/api/chat`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            message: currentInput,
+            history: cleanedHistory,
+            image: imageData,
+          }),
+        }
+      );
+
+      // ------------------------------------------------------
+      // Handle HTTP errors
+      // ------------------------------------------------------
 
       if (!response.ok) {
-        let errorMessage = `Request failed with status ${response.status}`;
+        let errorMessage =
+          `Request failed with status ${response.status}`;
 
         try {
-          const errorData = await response.json();
+          const errorData =
+            await response.json();
 
           if (errorData?.error) {
-            errorMessage = errorData.error;
+            errorMessage =
+              errorData.error;
+
+            if (errorData?.details) {
+              console.error(
+                "Gemini API details:",
+                errorData.details
+              );
+            }
           }
         } catch {
-          // Ignore JSON parsing errors.
+          const errorText =
+            await response.text();
+
+          if (errorText) {
+            errorMessage = errorText;
+          }
         }
 
         throw new Error(errorMessage);
       }
 
       if (!response.body) {
-        throw new Error("The server did not return a response stream.");
+        throw new Error(
+          "The server did not return a streaming response."
+        );
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+      // ------------------------------------------------------
+      // Read Gemini SSE stream
+      // ------------------------------------------------------
+
+      const reader =
+        response.body.getReader();
+
+      const decoder =
+        new TextDecoder("utf-8");
 
       let buffer = "";
       let completeModelResponse = "";
 
+      const handleIncomingText = (text) => {
+        completeModelResponse += text;
+
+        setStreamingText(
+          completeModelResponse
+        );
+      };
+
+      const handleStreamError = (error) => {
+        throw error;
+      };
+
       while (true) {
-        const { value, done } = await reader.read();
+        const { value, done } =
+          await reader.read();
 
         if (done) break;
 
-        buffer += decoder.decode(value, {
-          stream: true,
-        });
-
-        const lines = buffer.split("\n");
-
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-
-          if (!trimmed.startsWith("data:")) {
-            continue;
+        buffer += decoder.decode(
+          value,
+          {
+            stream: true,
           }
+        );
 
-          const jsonString = trimmed
-            .replace(/^data:\s*/, "")
-            .trim();
+        // SSE events are separated by blank lines.
+        const events =
+          buffer.split(/\r?\n\r?\n/);
 
-          if (!jsonString || jsonString === "[DONE]") {
-            continue;
-          }
+        // Keep the incomplete event for
+        // the next network chunk.
+        buffer =
+          events.pop() || "";
 
-          try {
-            const parsed = JSON.parse(jsonString);
+        for (const event of events) {
+          const lines =
+            event.split(/\r?\n/);
 
-            if (parsed.text) {
-              completeModelResponse += parsed.text;
-
-              setStreamingText(
-                completeModelResponse
-              );
-            }
-
-            if (parsed.error) {
-              throw new Error(parsed.error);
-            }
-          } catch (error) {
-            if (
-              error instanceof Error &&
-              error.message !==
-                "Unexpected end of JSON input"
-            ) {
-              console.warn(
-                "Stream parsing warning:",
-                error.message
-              );
-            }
+          for (const line of lines) {
+            processSSELine(
+              line,
+              handleIncomingText,
+              handleStreamError
+            );
           }
         }
       }
 
-      if (buffer.trim().startsWith("data:")) {
-        const jsonString = buffer
-          .trim()
-          .replace(/^data:\s*/, "")
-          .trim();
+      // Flush remaining decoder data.
+      buffer += decoder.decode();
 
-        if (jsonString && jsonString !== "[DONE]") {
-          try {
-            const parsed = JSON.parse(jsonString);
+      if (buffer.trim()) {
+        const lines =
+          buffer.split(/\r?\n/);
 
-            if (parsed.text) {
-              completeModelResponse += parsed.text;
-            }
-          } catch {
-            // Ignore incomplete final chunk.
-          }
+        for (const line of lines) {
+          processSSELine(
+            line,
+            handleIncomingText,
+            handleStreamError
+          );
         }
+      }
+
+      // ------------------------------------------------------
+      // Add completed response to chat
+      // ------------------------------------------------------
+
+      if (!completeModelResponse) {
+        completeModelResponse =
+          "I couldn't generate a response.";
       }
 
       setChatLog((prev) => [
@@ -266,15 +427,19 @@ export default function GeminiChat() {
         {
           role: "model",
           parts: [
-            completeModelResponse ||
-              "I couldn't generate a response.",
+            completeModelResponse,
           ],
         },
       ]);
 
       setStreamingText("");
     } catch (error) {
-      console.error("CHAT ERROR:", error);
+      console.error(
+        "CHAT ERROR:",
+        error
+      );
+
+      setStreamingText("");
 
       setChatLog((prev) => [
         ...prev,
@@ -282,40 +447,45 @@ export default function GeminiChat() {
           role: "model",
           parts: [
             `**Connection Error**\n\n${
-              error.message ||
+              error?.message ||
               "Unable to connect to the AI service."
             }`,
           ],
         },
       ]);
-
-      setStreamingText("");
     } finally {
       setLoading(false);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (
+      e.key === "Enter" &&
+      !e.shiftKey
+    ) {
       e.preventDefault();
+
       handleSubmit(e);
     }
   };
 
   return (
     <div className="gemini-chat">
-      <div className="gemini-header">
-        <div>
-          <div className="gemini-title-row">
-            <div className="gemini-icon">✦</div>
 
-            <div>
-              <h2>AI Chat</h2>
-              <p>
-                Chat with your AI assistant and analyze
-                images.
-              </p>
-            </div>
+      {/* HEADER */}
+      <div className="gemini-header">
+        <div className="gemini-title-row">
+          <div className="gemini-icon">
+            ✦
+          </div>
+
+          <div>
+            <h2>AI Chat</h2>
+
+            <p>
+              Chat with your AI assistant and
+              analyze images.
+            </p>
           </div>
         </div>
 
@@ -323,118 +493,153 @@ export default function GeminiChat() {
           type="button"
           className="clear-chat-button"
           onClick={handleClearChat}
-          disabled={loading && chatLog.length === 0}
+          disabled={loading}
         >
           Clear
         </button>
       </div>
 
+
+      {/* MESSAGES */}
       <div className="gemini-messages">
-        {chatLog.length === 0 && !streamingText && (
-          <div className="chat-empty">
-            <div className="empty-icon">✦</div>
 
-            <h3>How can I help you?</h3>
+        {chatLog.length === 0 &&
+          !streamingText && (
+            <div className="chat-empty">
 
-            <p>
-              Ask questions, generate ideas, explain
-              code, or upload an image for analysis.
-            </p>
+              <div className="empty-icon">
+                ✦
+              </div>
 
-            <div className="suggestion-grid">
-              <button
-                type="button"
-                onClick={() =>
-                  setInput(
-                    "Explain this concept in simple terms."
-                  )
-                }
-              >
-                Explain something
-              </button>
+              <h3>
+                How can I help you?
+              </h3>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setInput(
-                    "Help me write a professional business plan."
-                  )
-                }
-              >
-                Write something
-              </button>
+              <p>
+                Ask questions, generate ideas,
+                explain code, or upload an image
+                for analysis.
+              </p>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setInput(
-                    "Help me debug this code."
-                  )
-                }
-              >
-                Debug code
-              </button>
+              <div className="suggestion-grid">
 
-              <button
-                type="button"
-                onClick={() =>
-                  fileInputRef.current?.click()
-                }
-              >
-                Analyze an image
-              </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setInput(
+                      "Explain this concept in simple terms."
+                    )
+                  }
+                >
+                  Explain something
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setInput(
+                      "Help me write a professional business plan."
+                    )
+                  }
+                >
+                  Write something
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setInput(
+                      "Help me debug this code."
+                    )
+                  }
+                >
+                  Debug code
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    fileInputRef.current?.click()
+                  }
+                >
+                  Analyze an image
+                </button>
+
+              </div>
             </div>
-          </div>
+          )}
+
+
+        {chatLog.map(
+          (message, index) => (
+            <div
+              className={`chat-message ${
+                message.role === "user"
+                  ? "user-message"
+                  : "model-message"
+              }`}
+              key={index}
+            >
+
+              <div className="message-avatar">
+                {message.role === "user"
+                  ? "You"
+                  : "✦"}
+              </div>
+
+              <div className="message-content">
+
+                {message.previewUrl && (
+                  <img
+                    src={
+                      message.previewUrl
+                    }
+                    alt="Uploaded"
+                    className="chat-image"
+                  />
+                )}
+
+                {message.parts.map(
+                  (part, partIndex) => (
+                    <div
+                      key={partIndex}
+                      className="markdown-content"
+                    >
+                      <ReactMarkdown
+                        remarkPlugins={[
+                          remarkGfm,
+                        ]}
+                      >
+                        {typeof part ===
+                        "string"
+                          ? part
+                          : part?.text || ""}
+                      </ReactMarkdown>
+                    </div>
+                  )
+                )}
+
+              </div>
+            </div>
+          )
         )}
 
-        {chatLog.map((message, index) => (
-          <div
-            className={`chat-message ${
-              message.role === "user"
-                ? "user-message"
-                : "model-message"
-            }`}
-            key={index}
-          >
-            <div className="message-avatar">
-              {message.role === "user" ? "You" : "✦"}
-            </div>
 
-            <div className="message-content">
-              {message.previewUrl && (
-                <img
-                  src={message.previewUrl}
-                  alt="Uploaded"
-                  className="chat-image"
-                />
-              )}
-
-              {message.parts.map((part, partIndex) => (
-                <div
-                  key={partIndex}
-                  className="markdown-content"
-                >
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                  >
-                    {typeof part === "string"
-                      ? part
-                      : part?.text || ""}
-                  </ReactMarkdown>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-
+        {/* STREAMING RESPONSE */}
         {streamingText && (
           <div className="chat-message model-message">
-            <div className="message-avatar">✦</div>
+
+            <div className="message-avatar">
+              ✦
+            </div>
 
             <div className="message-content">
+
               <div className="markdown-content">
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
+                  remarkPlugins={[
+                    remarkGfm,
+                  ]}
                 >
                   {streamingText}
                 </ReactMarkdown>
@@ -443,27 +648,39 @@ export default function GeminiChat() {
               <span className="streaming-cursor">
                 ▋
               </span>
+
             </div>
           </div>
         )}
 
-        {loading && !streamingText && (
-          <div className="chat-message model-message">
-            <div className="message-avatar">✦</div>
 
-            <div className="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
+        {/* THINKING */}
+        {loading &&
+          !streamingText && (
+            <div className="chat-message model-message">
+
+              <div className="message-avatar">
+                ✦
+              </div>
+
+              <div className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
             </div>
-          </div>
-        )}
+          )}
 
         <div ref={messagesEndRef} />
+
       </div>
 
+
+      {/* IMAGE PREVIEW */}
       {imagePreview && (
         <div className="selected-image">
+
           <img
             src={imagePreview}
             alt="Selected"
@@ -476,14 +693,19 @@ export default function GeminiChat() {
           >
             ×
           </button>
+
         </div>
       )}
 
+
+      {/* INPUT */}
       <form
         className="gemini-input-area"
         onSubmit={handleSubmit}
       >
+
         <div className="input-tools">
+
           <input
             ref={fileInputRef}
             type="file"
@@ -503,11 +725,14 @@ export default function GeminiChat() {
           >
             ＋
           </button>
+
         </div>
 
         <textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) =>
+            setInput(e.target.value)
+          }
           onKeyDown={handleKeyDown}
           placeholder="Message your AI assistant..."
           rows={1}
@@ -519,17 +744,22 @@ export default function GeminiChat() {
           className="send-button"
           disabled={
             loading ||
-            (!input.trim() && !imageFile)
+            (!input.trim() &&
+              !imageFile)
           }
           title="Send message"
         >
           {loading ? "…" : "↑"}
         </button>
+
       </form>
 
+
       <div className="gemini-disclaimer">
-        AI can make mistakes. Check important information.
+        AI can make mistakes. Check important
+        information.
       </div>
+
     </div>
   );
 }
