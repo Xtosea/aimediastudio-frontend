@@ -159,15 +159,14 @@ function ContentGenerator() {
     const text = result.content;
 
     window.dispatchEvent(
-      new CustomEvent("ai-media-use-text", {
-        detail: { text },
-      })
-    );
+  new CustomEvent("ai-media-use-text", {
+    detail: { text },
+  })
+);
 
-    alert(
-      "Content prepared for Text to Speech. TTS integration can be connected next."
-    );
-  }
+window.dispatchEvent(
+  new CustomEvent("ai-media-open-tts")
+);
 
   return (
     <div className="tool-page">
