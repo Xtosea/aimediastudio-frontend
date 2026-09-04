@@ -167,6 +167,7 @@ function ContentGenerator() {
 window.dispatchEvent(
   new CustomEvent("ai-media-open-tts")
 );
+}
 
   return (
     <div className="tool-page">
