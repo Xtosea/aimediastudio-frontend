@@ -9,6 +9,25 @@ const API_BASE =
 function App() {
   const [activeTool, setActiveTool] = useState("tts");
 
+useEffect(() => {
+  function handleOpenTTS() {
+    setActiveTool("tts");
+  }
+
+  window.addEventListener(
+    "ai-media-open-tts",
+    handleOpenTTS
+  );
+
+  return () => {
+    window.removeEventListener(
+      "ai-media-open-tts",
+      handleOpenTTS
+    );
+  };
+}, []);
+
+
   return (
     <div className="studio">
       <aside className="sidebar">
@@ -124,6 +143,27 @@ function TextToSpeech() {
   const [generating, setGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    function handleUseText(event) {
+      if (event.detail?.text) {
+        setText(event.detail.text);
+      }
+    }
+
+    window.addEventListener(
+      "ai-media-use-text",
+      handleUseText
+    );
+
+    return () => {
+      window.removeEventListener(
+        "ai-media-use-text",
+        handleUseText
+      );
+    };
+  }, []);
+
 
   useEffect(() => {
     loadVoices();
