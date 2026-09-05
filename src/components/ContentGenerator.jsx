@@ -158,16 +158,18 @@ function ContentGenerator() {
 
     const text = result.content;
 
-    window.dispatchEvent(
-  new CustomEvent("ai-media-use-text", {
-    detail: { text },
-  })
-);
+    function useForTTS() {
+  if (!result?.content) return;
 
-window.dispatchEvent(
-  new CustomEvent("ai-media-open-tts")
-);
+  const text = result.content;
+
+  window.dispatchEvent(
+    new CustomEvent("ai-media-use-text", {
+      detail: { text },
+    })
+  );
 }
+
 
   return (
     <div className="tool-page">
