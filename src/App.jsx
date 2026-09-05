@@ -8,21 +8,28 @@ const API_BASE =
 
 function App() {
   const [activeTool, setActiveTool] = useState("tts");
+const [ttsText, setTtsText] = useState("");
+
 
 useEffect(() => {
-  function handleOpenTTS() {
-    setActiveTool("tts");
+  function handleUseText(event) {
+    const text = event.detail?.text || "";
+
+    if (text) {
+      setTtsText(text);
+      setActiveTool("tts");
+    }
   }
 
   window.addEventListener(
-    "ai-media-open-tts",
-    handleOpenTTS
+    "ai-media-use-text",
+    handleUseText
   );
 
   return () => {
     window.removeEventListener(
-      "ai-media-open-tts",
-      handleOpenTTS
+      "ai-media-use-text",
+      handleUseText
     );
   };
 }, []);
@@ -118,8 +125,10 @@ useEffect(() => {
           </div>
         </header>
 
-        <div className="content">
-  {activeTool === "tts" && <TextToSpeech />}
+<div className="content">
+ {activeTool === "tts" && (
+  <TextToSpeech initialText={ttsText} />
+)}
   {activeTool === "image-video" && <ImageToVideo />}
   {activeTool === "content" && <ContentGenerator />}
   {activeTool === "lip-sync" && <LipSync />}
@@ -135,35 +144,22 @@ useEffect(() => {
    TEXT TO SPEECH
    ============================================================ */
 
-function TextToSpeech() {
+function TextToSpeech({ initialText = "" }) {
   const [voices, setVoices] = useState([]);
   const [voiceId, setVoiceId] = useState("");
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [loadingVoices, setLoadingVoices] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    function handleUseText(event) {
-      if (event.detail?.text) {
-        setText(event.detail.text);
-      }
-    }
+useEffect(() => {
+  if (initialText) {
+    setText(initialText);
+  }
+}, [initialText]);
 
-    window.addEventListener(
-      "ai-media-use-text",
-      handleUseText
-    );
-
-    return () => {
-      window.removeEventListener(
-        "ai-media-use-text",
-        handleUseText
-      );
-    };
-  }, []);
-
+  
 
   useEffect(() => {
     loadVoices();
