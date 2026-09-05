@@ -60,6 +60,7 @@ button {
 .sidebar {
   width: 250px;
   min-height: 100vh;
+
   position: fixed;
   left: 0;
   top: 0;
@@ -69,10 +70,12 @@ button {
 
   padding: 24px 16px;
 
-  border-right: 1px solid #202024;
+  border-right: 1px solid #303036;
 
-  background: rgba(13, 13, 16, 0.96);
-  backdrop-filter: blur(20px);
+  background: #0b0b0f;
+
+  box-shadow:
+    8px 0 30px rgba(0, 0, 0, 0.25);
 
   z-index: 10;
 }
@@ -82,7 +85,11 @@ button {
   align-items: center;
   gap: 12px;
 
-  padding: 4px 8px 30px;
+  padding: 4px 8px 26px;
+
+  border-bottom: 1px solid #242429;
+
+  margin-bottom: 20px;
 }
 
 .brand-icon {
@@ -101,17 +108,23 @@ button {
     #4f46e5
   );
 
+  box-shadow:
+    0 0 22px rgba(124, 58, 237, 0.25);
+
   font-size: 23px;
   font-weight: 700;
 }
 
 .brand-name {
+  color: #ffffff;
+
   font-size: 16px;
   font-weight: 700;
 }
 
 .brand-subtitle {
-  color: #88888f;
+  color: #9999a3;
+
   font-size: 13px;
   margin-top: 2px;
 }
@@ -121,13 +134,14 @@ button {
 }
 
 .section-label {
-  padding: 0 10px 10px;
+  padding: 0 10px 11px;
 
-  color: #66666e;
+  color: #a78bfa;
 
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 800;
+
+  letter-spacing: 0.14em;
 }
 
 .tool-button {
@@ -139,38 +153,68 @@ button {
 
   padding: 12px 12px;
 
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 
   border: 1px solid transparent;
   border-radius: 10px;
 
   background: transparent;
 
-  color: #a9a9b0;
+  color: #b7b7c0;
 
   text-align: left;
+
+  cursor: pointer;
 
   transition:
     background 0.2s,
     color 0.2s,
-    border-color 0.2s;
+    border-color 0.2s,
+    transform 0.2s;
 }
 
 .tool-button:hover {
-  background: #17171b;
-  color: #fff;
+  background: #18181d;
+
+  border-color: #292930;
+
+  color: #ffffff;
+
+  transform: translateX(2px);
 }
 
 .tool-button.active {
-  background: #1d1730;
-  border-color: #33245a;
-  color: #fff;
+  background: linear-gradient(
+    90deg,
+    #21183a,
+    #181321
+  );
+
+  border-color: #493477;
+
+  color: #ffffff;
+
+  box-shadow:
+    inset 3px 0 0 #8b5cf6,
+    0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .tool-icon {
   width: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #a78bfa;
+
   text-align: center;
+
   font-size: 17px;
+}
+
+.tool-button.active .tool-icon {
+  color: #c4b5fd;
 }
 
 .sidebar-bottom {
@@ -184,10 +228,13 @@ button {
 
   padding: 12px;
 
-  border: 1px solid #222227;
+  border: 1px solid #292930;
   border-radius: 10px;
 
-  background: #111114;
+  background: #111116;
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .status-dot {
@@ -203,6 +250,8 @@ button {
 }
 
 .status-title {
+  color: #e4e4e7;
+
   font-size: 12px;
   font-weight: 600;
 }
@@ -210,7 +259,7 @@ button {
 .status-subtitle {
   margin-top: 2px;
 
-  color: #66666e;
+  color: #777780;
 
   font-size: 10px;
 }
