@@ -154,11 +154,6 @@ function ContentGenerator() {
   }
 
   function useForTTS() {
-    if (!result?.content) return;
-
-    const text = result.content;
-
-    function useForTTS() {
   if (!result?.content) return;
 
   const text = result.content;
