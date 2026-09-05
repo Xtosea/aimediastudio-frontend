@@ -1137,34 +1137,51 @@ button {
 
 .content-result-card {
   position: relative;
+
   padding: 20px;
-  border: 1px solid var(--border-color, #e5e7eb);
+
+  border: 1px solid #242429;
   border-radius: 16px;
-  background: var(--panel-bg, #ffffff);
+
+  background: #0d0d10;
+
+  color: #f5f5f5;
 }
 
 .result-label {
   margin-bottom: 10px;
+
   font-size: 11px;
   font-weight: 700;
+
   letter-spacing: 0.08em;
-  color: #777;
+
+  color: #8b8b95;
 }
 
 .generated-headline {
   margin: 0;
+
   padding-right: 70px;
+
+  color: #ffffff;
+
   font-size: 22px;
   line-height: 1.35;
 }
 
 .generated-content {
   white-space: pre-wrap;
+
+  color: #e4e4e7;
+
   line-height: 1.7;
   font-size: 15px;
 }
 
 .generated-cta {
+  color: #d4d4d8;
+
   line-height: 1.6;
   font-size: 15px;
   font-weight: 600;
@@ -1172,16 +1189,24 @@ button {
 
 .copy-button {
   margin-top: 14px;
+
   padding: 8px 12px;
-  border: 1px solid var(--border-color, #e5e7eb);
+
+  border: 1px solid #303036;
   border-radius: 9px;
-  background: transparent;
+
+  background: #151518;
+
+  color: #d4d4d8;
+
   cursor: pointer;
+
   font-size: 13px;
 }
 
 .copy-button:hover {
-  opacity: 0.75;
+  background: #202025;
+  color: #ffffff;
 }
 
 .hashtags {
@@ -1192,9 +1217,15 @@ button {
 
 .hashtag {
   display: inline-flex;
+
   padding: 7px 10px;
+
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.1);
+
+  background: rgba(99, 102, 241, 0.15);
+
+  color: #c4b5fd;
+
   font-size: 13px;
   font-weight: 600;
 }
@@ -1202,11 +1233,14 @@ button {
 .result-actions {
   display: flex;
   flex-wrap: wrap;
+
   gap: 10px;
+
   margin-top: 4px;
 }
 
 .result-actions .secondary-button {
   flex: 1;
+
   min-width: 140px;
 }
